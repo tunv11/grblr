@@ -15,3 +15,8 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# Keep onEvent for EventBus
+-keepclassmembers class ** {
+    public void onEvent*(***);
+}

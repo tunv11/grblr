@@ -76,9 +76,10 @@
                 android:layout_centerVertical="true"
                 android:layout_toLeftOf="@+id/usbConnectButton"
                 android:layout_toStartOf="@+id/usbConnectButton"
-                android:checked="true"
+                android:checked="false"
                 android:clickable="false"
-                android:buttonTint="@color/colorGo" />
+                android:buttonTint="@color/colorGo"
+                android:alpha="0.5" />
 
         </RelativeLayout>
 
@@ -292,6 +293,7 @@
             <com.lookintothebeam.grblr.ui.GcodeVisualizerSurfaceView
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
+                android:onClick="onViewClick"
                 android:id="@+id/gcodeVisualizerSurfaceView" />
 
             <RelativeLayout

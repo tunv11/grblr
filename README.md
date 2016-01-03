@@ -10,3 +10,4 @@ Android host controller for [grbl](https://github.com/grbl/grbl).
 
 - [UsbSerial](https://github.com/felHR85/UsbSerial)
 - [NanoHttpd](https://github.com/NanoHttpd/nanohttpd)
+- [EventBus](https://github.com/greenrobot/EventBus)

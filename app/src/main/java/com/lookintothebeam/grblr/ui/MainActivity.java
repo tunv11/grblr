@@ -1,20 +1,16 @@
 package com.lookintothebeam.grblr.ui;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.hardware.usb.UsbDevice;
-import android.media.Image;
-import android.opengl.GLSurfaceView;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+import android.os.IBinder;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MenuItem;
-import android.view.SurfaceView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -24,61 +20,100 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 import com.lookintothebeam.grblr.R;
-import com.lookintothebeam.grblr.web.WebServerService;
 
 import com.lookintothebeam.grblr.cnc.CNCService;
+import com.lookintothebeam.grblr.cnc.CNCServiceEvent;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import de.greenrobot.event.EventBus;
+
 public class MainActivity extends AppCompatActivity {
 
-    // UI
-    private RelativeLayout rootLayoutView;
-    private TabHost tabHost;
+    // --- UI ---
+    private RelativeLayout mRootLayoutView;
+    private TabHost mTabHost;
 
-    private TextView mainStatusText;
-    private TextView secondaryStatusText;
-    private RadioButton usbStatusRadio;
-    private ImageButton usbConnectButton;
-    private ImageButton settingsButton;
+    private TextView mMainStatusText;
+    private TextView mSecondaryStatusText;
+    private RadioButton mUSBStatusRadio;
+    private ImageButton mUSBConnectButton;
+    private ImageButton mSettingsButton;
 
-    private GcodeVisualizerSurfaceView visualizerSurfaceView;
+    private GcodeVisualizerSurfaceView mVisualizerSurfaceView;
 
-    // State
+    // --- CNC Service ---
+    private CNCService mCNCService;
+    private boolean mCNCServiceBound = false;
+    private ServiceConnection mCNCServiceConnection = new ServiceConnection() {
 
-    // CNC Service
-    public CNCService cncService;
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            CNCService.LocalBinder binder = (CNCService.LocalBinder) service;
+            mCNCService = binder.getService();
+            mCNCServiceBound = true;
 
+            EventBus.getDefault().registerSticky(MainActivity.this);
+
+            toggleUSBButtion(true);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mCNCServiceBound = false;
+
+            EventBus.getDefault().unregister(MainActivity.this);
+
+            toggleUSBButtion(false);
+        }
+    };
+
+    // --- Service Events ---
+    public void onEvent(CNCServiceEvent event) {
+        switch(event.type) {
+            case USB_DEVICE_CONNECTED:
+                toggleUSBConnectionStatus(true);
+                break;
+            case USB_DEVICE_DISCONNECTED:
+                toggleUSBConnectionStatus(false);
+                break;
+        }
+
+    }
+
+    // --- Activity Lifecycle ---
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Intent intent = new Intent(this, CNCService.class);
+        bindService(intent, mCNCServiceConnection, Context.BIND_AUTO_CREATE);
+
         setupTabs();
-        rootLayoutView = (RelativeLayout) findViewById(R.id.rootLayoutView);
+        mRootLayoutView = (RelativeLayout) findViewById(R.id.rootLayoutView);
 
         //startService(new Intent(getBaseContext(), WebServerService.class));
+    }
 
-        //TODO: Wait for service to started
-        startService(new Intent(getBaseContext(), CNCService.class));
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-        Log.d("MainActivity", "Service should be started.");
-        cncService = CNCService.sInstance;
+        unbindService(mCNCServiceConnection);
+        mCNCServiceBound = false;
     }
 
     public void onSendClick(View v) {
         EditText serialEditText = (EditText) findViewById(R.id.serialEditText);
-        cncService.sendSerialData(serialEditText.getText().toString());
+        mCNCService.sendSerialData(serialEditText.getText().toString());
         serialEditText.setText("");
     }
 
     public void onUSBClick(View v) {
 
-        cncService = CNCService.sInstance;
-
-        final Set<Map.Entry<String, UsbDevice>> devices = cncService.getUSBDevices().entrySet();
+        final Set<Map.Entry<String, UsbDevice>> devices = mCNCService.getUSBDevices().entrySet();
         String[] deviceStrings = new String[devices.size()];
 
         int i = 0;
@@ -88,6 +123,10 @@ public class MainActivity extends AppCompatActivity {
             i++;
         }
 
+        //TODO: No devices available
+        //TODO: Disconnect menu item
+        //TODO: Notify after permission request
+
         final AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle(R.string.select_usb_device);
         alert.setItems(deviceStrings, new DialogInterface.OnClickListener() {
@@ -95,9 +134,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
 
                 int i = 0;
-                for(Map.Entry<String, UsbDevice> deviceEntry : devices) {
-                    if(i == which) {
-                        cncService.openUSBDevice(deviceEntry.getKey());
+                for (Map.Entry<String, UsbDevice> deviceEntry : devices) {
+                    if (i == which) {
+                        mCNCService.openUSBDevice(deviceEntry.getKey());
                         return;
                     }
                     i++;
@@ -115,20 +154,19 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-
     private void setupTabs() {
-        tabHost = (TabHost) findViewById(R.id.tabHost);
-        tabHost.setup();
+        mTabHost = (TabHost) findViewById(R.id.tabHost);
+        mTabHost.setup();
 
-        TabHost.TabSpec ts1 = tabHost.newTabSpec("manualControl");
+        TabHost.TabSpec ts1 = mTabHost.newTabSpec("manualControl");
         ts1.setContent(R.id.manualControlTabContent);
         ts1.setIndicator(getResources().getString(R.string.machine_control_tab_name));
-        tabHost.addTab(ts1);
+        mTabHost.addTab(ts1);
 
-        TabHost.TabSpec ts2 = tabHost.newTabSpec("fileControl");
+        TabHost.TabSpec ts2 = mTabHost.newTabSpec("fileControl");
         ts2.setContent(R.id.fileControlTabContent);
         ts2.setIndicator(getResources().getString(R.string.file_control_tab_name));
-        tabHost.addTab(ts2);
+        mTabHost.addTab(ts2);
     }
 
     @Override
@@ -136,10 +174,8 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
 
         // The following call pauses the rendering thread.
-        // If your OpenGL application is memory intensive,
-        // you should consider de-allocating objects that
-        // consume significant memory here.
-        visualizerSurfaceView.onPause();
+        // Consider de-allocating objects that consume significant memory here.
+        mVisualizerSurfaceView.onPause();
     }
 
     @Override
@@ -147,19 +183,29 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         // Initialize UI
-        mainStatusText = (TextView) findViewById(R.id.mainStatusText);
-        secondaryStatusText = (TextView) findViewById(R.id.secondaryStatusText);
-        usbStatusRadio = (RadioButton) findViewById(R.id.usbStatusButton);
-        usbConnectButton = (ImageButton) findViewById(R.id.usbConnectButton);
-        settingsButton = (ImageButton) findViewById(R.id.settingsButton);
-        visualizerSurfaceView = (GcodeVisualizerSurfaceView) findViewById(R.id.gcodeVisualizerSurfaceView);
+        mMainStatusText = (TextView) findViewById(R.id.mainStatusText);
+        mSecondaryStatusText = (TextView) findViewById(R.id.secondaryStatusText);
+        mUSBStatusRadio = (RadioButton) findViewById(R.id.usbStatusButton);
+        mUSBConnectButton = (ImageButton) findViewById(R.id.usbConnectButton);
+        mSettingsButton = (ImageButton) findViewById(R.id.settingsButton);
+        mVisualizerSurfaceView = (GcodeVisualizerSurfaceView) findViewById(R.id.gcodeVisualizerSurfaceView);
 
         // The following call resumes a paused rendering thread.
-        // If you de-allocated graphic objects for onPause()
-        // this is a good place to re-allocate them.
-        visualizerSurfaceView.onResume();
+        // Re-allocate graphic objects from onPause()
+        mVisualizerSurfaceView.onResume();
 
         hideSystemUI();
+    }
+
+    private void toggleUSBButtion(boolean enabled) {
+        mUSBConnectButton.setEnabled(enabled);
+        mUSBConnectButton.setClickable(enabled);
+        mUSBConnectButton.setImageAlpha(enabled ? 255 : 127);
+    }
+
+    private void toggleUSBConnectionStatus(boolean enabled) {
+        mUSBStatusRadio.setChecked(enabled);
+        mUSBStatusRadio.setAlpha(enabled ? 1.0f : 0.5f);
     }
 
     public void onViewClick(View v) {
@@ -169,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
     private void hideSystemUI() {
         // Set the content to appear under the system bars so that the content
         // doesn't resize when the system bars hide and show.
-        rootLayoutView.setSystemUiVisibility(
+        mRootLayoutView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -179,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSystemUI() {
-        rootLayoutView.setSystemUiVisibility(
+        mRootLayoutView.setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
