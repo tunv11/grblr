@@ -1,9 +1,15 @@
 <resources>
     <string name="app_name">grblr</string>
+
     <string name="machine_position_string">MACHINE POSITION</string>
+
     <string name="machine_control_tab_name">Machine Control</string>
     <string name="file_control_tab_name">File</string>
+    <string name="gcode_control_tab_name">Command Input</string>
 
     <string name="select_usb_device">Select a device</string>
     <string name="cancel">Cancel</string>
+    <string name="defaultFilePath">Pick a file...</string>
+    <string name="confirm_open_file">The currently open file is in progress. Are you sure you want to open another file?</string>
+    <string name="open_file_positive">Yes</string>
 </resources>

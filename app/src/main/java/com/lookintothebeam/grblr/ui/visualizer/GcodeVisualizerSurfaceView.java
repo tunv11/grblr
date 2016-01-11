@@ -1,4 +1,4 @@
-package com.lookintothebeam.grblr.ui;
+package com.lookintothebeam.grblr.ui.visualizer;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
@@ -9,7 +9,7 @@ import android.util.Log;
 public class GcodeVisualizerSurfaceView extends GLSurfaceView {
 
 
-    private static final String TAG = "GcodeVisualizerSurfaceView";
+    private static final String TAG = "GcodeVisualizerSurface";
 
     private final GcodeVisualizerRenderer renderer;
 

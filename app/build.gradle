@@ -27,4 +27,5 @@ dependencies {
     compile 'com.android.support:support-v4:23.1.1'
     compile 'de.greenrobot:eventbus:2.4.0'
     compile 'com.nanohttpd:nanohttpd:2.2.0'
+    compile 'com.nononsenseapps:filepicker:2.4.2'
 }

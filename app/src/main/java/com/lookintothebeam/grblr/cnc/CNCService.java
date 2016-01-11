@@ -10,12 +10,21 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.HashMap;
+import com.felhr.usbserial.UsbSerialDevice;
+import com.felhr.usbserial.UsbSerialInterface;
 
-import com.felhr.usbserial.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 
 import de.greenrobot.event.EventBus;
 
@@ -36,9 +45,7 @@ public class CNCService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-
         init();
-
         return mBinder;
     }
 
@@ -48,12 +55,24 @@ public class CNCService extends Service {
     private static UsbDevice mUsbDevice = null;
     private static UsbDeviceConnection mUsbConnection = null;
     private static UsbSerialDevice mSerial = null;
-    private UsbSerialInterface.UsbReadCallback mReadCallback;
+
+    private static GrblController mGrblController;
+
+    // --- File ---
+    private File mFile;
+    private List<GcodeCommand> mFileCommandQueue;
+    private boolean mFileCommandQueueStarted;
+    private int mFileCommandPosition = 0;
+
+    public File getFile() { return mFile; }
+    public List<GcodeCommand> getCommandQueue() { return mFileCommandQueue; }
+    public boolean getFileCommandQueueStarted() { return mFileCommandQueueStarted; }
+    public int getFileCommandPosition() { return mFileCommandPosition; }
 
     BroadcastReceiver mUsbAttachReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(intent.getAction())) {
-                //
+                //TODO: Automatically attach or bring up menu?
             }
         }
     };
@@ -83,9 +102,11 @@ public class CNCService extends Service {
             IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);
             registerReceiver(mUsbAttachReceiver , filter);
             filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
-            registerReceiver(mUsbDetachReceiver , filter);
+            registerReceiver(mUsbDetachReceiver, filter);
 
             closeUSBDevice();
+
+            mFileCommandQueue = new ArrayList<GcodeCommand>();
         }
     }
 
@@ -105,13 +126,7 @@ public class CNCService extends Service {
             mUsbDevice = selectedDevice;
             mUsbConnection = mUsbManager.openDevice(mUsbDevice);
             mSerial = UsbSerialDevice.createUsbSerialDevice(mUsbDevice, mUsbConnection);
-
-            mReadCallback = new UsbSerialInterface.UsbReadCallback() {
-                @Override
-                public void onReceivedData(byte[] arg0) {
-                    Log.d(TAG, "FROM SERIAL: " + new String(arg0));
-                }
-            };
+            //new ConnectionThread().run();
 
             if(mSerial != null) {
                 if(mSerial.open()) {
@@ -120,7 +135,8 @@ public class CNCService extends Service {
                     mSerial.setStopBits(UsbSerialInterface.STOP_BITS_1);
                     mSerial.setParity(UsbSerialInterface.PARITY_NONE);
                     mSerial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-                    mSerial.read(mReadCallback);
+
+                    mGrblController = new GrblController(mSerial);
 
                     EventBus.getDefault().postSticky(new CNCServiceEvent(CNCServiceEvent.EventType.USB_DEVICE_CONNECTED));
                 } else {
@@ -136,14 +152,15 @@ public class CNCService extends Service {
             Log.e(TAG, "USB device not available.");
             closeUSBDevice();
         }
-
     }
 
     public void closeUSBDevice() {
+
         if(mSerial != null) {
             mSerial.close();
             mSerial = null;
         }
+
         if(mUsbConnection != null) {
             mUsbConnection.close();
             mUsbConnection = null;
@@ -153,14 +170,109 @@ public class CNCService extends Service {
         EventBus.getDefault().postSticky(new CNCServiceEvent(CNCServiceEvent.EventType.USB_DEVICE_DISCONNECTED));
     }
 
+    /*
+    private class ConnectionThread extends Thread
+    {
+        @Override
+        public void run() {
+
+            mSerial = UsbSerialDevice.createUsbSerialDevice(mUsbDevice, mUsbConnection);
+
+            if(mSerial != null) {
+                if(mSerial.open()) {
+                    mSerial.setBaudRate(115200);
+                    mSerial.setDataBits(UsbSerialInterface.DATA_BITS_8);
+                    mSerial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+                    mSerial.setParity(UsbSerialInterface.PARITY_NONE);
+                    mSerial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+
+                    mGrblController = new GrblController(mSerial);
+
+                    EventBus.getDefault().postSticky(new CNCServiceEvent(CNCServiceEvent.EventType.USB_DEVICE_CONNECTED));
+
+                    // Everything went as expected. Send an intent to MainActivity
+                    //Intent intent = new Intent(ACTION_USB_READY);
+                    //context.sendBroadcast(intent);
+                } else {
+                    // Serial port could not be opened, maybe an I/O error or if CDC driver was chosen, it does not really fit
+                    // Send an Intent to Main Activity
+                    if(mSerial instanceof CDCSerialDevice) {
+                        //Intent intent = new Intent(ACTION_CDC_DRIVER_NOT_WORKING);
+                        //context.sendBroadcast(intent);
+                    } else {
+                        //Intent intent = new Intent(ACTION_USB_DEVICE_NOT_WORKING);
+                        //context.sendBroadcast(intent);
+                    }
+                }
+            } else {
+                // No driver for given device, even generic CDC driver could not be loaded
+                //Intent intent = new Intent(ACTION_USB_NOT_SUPPORTED);
+                //context.sendBroadcast(intent);
+            }
+        }
+    }
+    */
+
     public boolean isUSBDeviceConnected() {
         return mSerial != null;
     }
 
     public void sendSerialData(String data) {
-        String output = data + "\n";
-        mSerial.write(output.getBytes());
+        String output = data;
+        mSerial.write(data.getBytes());
         Log.d(TAG, "Sent: " + data);
+    }
+
+    public void openFile(String filepath) {
+        try {
+            mFileCommandQueue = new ArrayList<GcodeCommand>();
+            mFile = new File(filepath);
+            mFileCommandPosition = 0;
+
+            BufferedReader reader = new BufferedReader(new FileReader(mFile));
+
+            String line;
+            while((line = reader.readLine()) != null) {
+                //TODO: if(line.length() > MAX_GRBL_LINE_LENGTH) DO SOMETHING
+                mFileCommandQueue.add(new GcodeCommand(line));
+            }
+            reader.close();
+
+            mFileCommandQueueStarted = false;
+
+            EventBus.getDefault().post(new CNCServiceEvent(CNCServiceEvent.EventType.FILE_OPEN_SUCCESS)); //TODO: Receive this
+
+        } catch(IOException e) {
+            EventBus.getDefault().post(new CNCServiceEvent(CNCServiceEvent.EventType.FILE_OPEN_FAILURE)); //TODO: Receive this
+        }
+    }
+
+
+    public void cycleStart() {
+        if(mFile == null || mFileCommandQueue.size() <= 0) return;
+
+        mCycleHandler.post(mCycleLoop);
+    }
+
+    private static final int CYCLE_DELAY = 100;
+    private Handler mCycleHandler = new Handler();
+    private Runnable mCycleLoop = new Runnable() {
+        @Override
+        public void run() {
+            if(mFileCommandPosition > 0) mFileCommandQueue.get(mFileCommandPosition-1).setStatus(GcodeCommand.Status.COMPLETE);
+            if(mFileCommandPosition < mFileCommandQueue.size()) mFileCommandQueue.get(mFileCommandPosition).setStatus(GcodeCommand.Status.RUNNING);
+
+            mFileCommandPosition++;
+            EventBus.getDefault().post(new CNCServiceEvent(CNCServiceEvent.EventType.FILE_COMMAND_STATUS_UPDATED));
+
+            if(mFileCommandPosition < mFileCommandQueue.size()) {
+                mCycleHandler.postDelayed(this, CYCLE_DELAY);
+            }
+        }
+    };
+
+    public GrblController getGrblController() {
+        return mGrblController;
     }
 
 

@@ -116,20 +116,81 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
+
                     <RelativeLayout
                         android:id="@+id/fileControlTabContent"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical">
 
-                        <Button
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Load File"
-                            android:id="@+id/button3"
                             android:layout_alignParentTop="true"
+                            android:layout_alignParentStart="true"
+                            android:id="@+id/linearLayout2">
+
+                            <ImageButton
+                                android:layout_width="wrap_content"
+                                android:layout_height="fill_parent"
+                                android:id="@+id/fileOpenButton"
+                                android:src="@drawable/ic_folder_open_white_24dp"
+                                android:foregroundTintMode="add"
+                                android:layout_alignParentTop="true"
+                                android:layout_alignParentStart="true"
+                                android:tint="@color/colorBlue"
+                                android:background="#00FFFFFF"
+                                android:padding="10dp"
+                                android:onClick="onFileOpenClick"
+                                android:layout_margin="10dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="fill_parent"
+                                android:text="@string/defaultFilePath"
+                                android:id="@+id/fileNameTextView"
+                                android:layout_alignParentTop="true"
+                                android:layout_toEndOf="@+id/fileOpenButton"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:onClick="onFileOpenClick" />
+
+                            <android.support.design.widget.FloatingActionButton
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_directions_run_white_48dp"
+                                app:backgroundTint="@color/colorGo"
+                                android:clickable="true"
+                                android:id="@+id/cycleStartButton"
+                                android:adjustViewBounds="false"
+                                android:contextClickable="false"
+                                android:cropToPadding="false"
+                                android:layout_alignParentBottom="true"
+                                android:layout_alignParentLeft="true"
+                                android:layout_marginLeft="20dp"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginRight="20dp"
+                                android:layout_marginBottom="10dp"
+                                android:onClick="onCycleStartClick" />
+                        </LinearLayout>
+
+                        <ListView
+                            android:layout_width="wrap_content"
+                            android:layout_height="fill_parent"
+                            android:id="@+id/fileCodeLineListView"
+                            android:layout_below="@+id/linearLayout2"
                             android:layout_centerHorizontal="true"
-                            android:layout_marginTop="37dp" />
+                            android:choiceMode="none" />
+
+                    </RelativeLayout>
+
+
+                    <RelativeLayout
+                        android:id="@+id/gcodeControlTabContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
 
                         <Button
                             android:layout_width="wrap_content"
@@ -146,8 +207,11 @@
                             android:id="@+id/serialEditText"
                             android:layout_centerVertical="true"
                             android:layout_alignParentStart="true"
-                            android:singleLine="true" />
+                            android:singleLine="false" />
+
                     </RelativeLayout>
+
+
 
                     <RelativeLayout
                         android:id="@+id/manualControlTabContent"
@@ -155,85 +219,134 @@
                         android:layout_height="match_parent"
                         android:orientation="vertical">
 
-                        <RelativeLayout
+                        <LinearLayout
+                            android:orientation="horizontal"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentTop="true"
-                            android:id="@+id/jogControlsLayout"
-                            android:paddingLeft="20dp"
-                            android:paddingTop="50dp"
-                            android:paddingRight="20dp"
-                            android:paddingBottom="10dp">
+                            android:layout_height="wrap_content">
 
-                            <Button
-                                android:layout_width="@dimen/jog_button_size"
-                                android:layout_height="@dimen/jog_button_size"
-                                android:text="X-"
-                                android:id="@+id/xMinusJogButton"
-                                android:layout_marginTop="40dp"
-                                android:textSize="@dimen/jog_button_text_size"
-                                android:textColor="@color/colorPrimary"
-                                android:layout_alignParentTop="true"
-                                android:layout_alignParentLeft="true"
-                                android:layout_alignParentStart="true" />
 
-                            <Button
-                                android:layout_width="@dimen/jog_button_size"
-                                android:layout_height="@dimen/jog_button_size"
-                                android:text="X+"
-                                android:id="@+id/xPlusJogButton"
-                                android:textSize="@dimen/jog_button_text_size"
-                                android:textColor="@color/colorPrimary"
-                                android:layout_alignTop="@+id/xMinusJogButton"
-                                android:layout_toRightOf="@+id/yMinusJogButton"
-                                android:layout_toEndOf="@+id/yMinusJogButton"
-                                android:enabled="true" />
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"></FrameLayout>
 
-                            <Button
-                                android:layout_width="@dimen/jog_button_size"
-                                android:layout_height="@dimen/jog_button_size"
-                                android:text="Y-"
-                                android:id="@+id/yMinusJogButton"
-                                android:textSize="@dimen/jog_button_text_size"
-                                android:textColor="@color/colorPrimary"
-                                android:layout_below="@+id/yPlusJogButton"
-                                android:layout_alignLeft="@+id/yPlusJogButton"
-                                android:layout_alignStart="@+id/yPlusJogButton" />
+                            <RelativeLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:id="@+id/jogControlsXYLayout"
+                                android:padding="20dp">
 
-                            <Button
-                                android:layout_width="@dimen/jog_button_size"
-                                android:layout_height="@dimen/jog_button_size"
-                                android:text="Y+"
-                                android:id="@+id/yPlusJogButton"
-                                android:textSize="@dimen/jog_button_text_size"
-                                android:textColor="@color/colorPrimary"
-                                android:layout_alignParentTop="true"
-                                android:layout_toRightOf="@+id/xMinusJogButton"
-                                android:layout_toEndOf="@+id/xMinusJogButton" />
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="Y+"
+                                    android:id="@+id/yPlusJogButton"
+                                    android:textSize="@dimen/jog_button_text_size"
+                                    android:textColor="@color/colorPrimary"
+                                    android:layout_column="2"
+                                    android:layout_alignParentTop="true"
+                                    android:layout_centerHorizontal="true" />
 
-                            <Button
-                                android:layout_width="@dimen/jog_button_size"
-                                android:layout_height="@dimen/jog_button_size"
-                                android:text="Z-"
-                                android:id="@+id/button"
-                                android:textSize="@dimen/jog_button_text_size"
-                                android:textColor="@color/colorPrimary"
-                                android:layout_below="@+id/yPlusJogButton"
-                                android:layout_alignLeft="@+id/button2"
-                                android:layout_alignStart="@+id/button2"
-                                android:enabled="true" />
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="X-"
+                                    android:id="@+id/xMinusJogButton"
+                                    android:textSize="@dimen/jog_button_text_size"
+                                    android:textColor="@color/colorPrimary"
+                                    android:layout_column="1"
+                                    android:layout_centerVertical="true"
+                                    android:layout_alignParentLeft="true" />
 
-                            <Button
-                                android:layout_width="@dimen/jog_button_size"
-                                android:layout_height="@dimen/jog_button_size"
-                                android:text="Z+"
-                                android:id="@+id/button2"
-                                android:textSize="@dimen/jog_button_text_size"
-                                android:textColor="@color/colorPrimary"
-                                android:layout_above="@+id/button"
-                                android:layout_alignParentRight="true" />
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="X+"
+                                    android:id="@+id/xPlusJogButton"
+                                    android:textSize="@dimen/jog_button_text_size"
+                                    android:textColor="@color/colorPrimary"
+                                    android:enabled="true"
+                                    android:layout_column="3"
+                                    android:layout_gravity="center_vertical|right"
+                                    android:gravity="center"
+                                    android:layout_centerVertical="true"
+                                    android:layout_alignParentEnd="false"
+                                    android:layout_toRightOf="@+id/zeroXYButton" />
 
-                        </RelativeLayout>
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="Y-"
+                                    android:id="@+id/yMinusJogButton"
+                                    android:textSize="@dimen/jog_button_text_size"
+                                    android:textColor="@color/colorPrimary"
+                                    android:layout_column="2"
+                                    android:layout_alignParentBottom="true"
+                                    android:layout_centerHorizontal="true" />
+
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="Zero\nXY"
+                                    android:id="@+id/zeroXYButton"
+                                    android:layout_column="2"
+                                    android:singleLine="false"
+                                    android:textSize="16dp"
+                                    android:layout_centerInParent="true"
+                                    android:layout_toRightOf="@+id/xMinusJogButton"
+                                    android:textColor="@color/colorAccent"
+                                    android:backgroundTint="#eeeeee" />
+                            </RelativeLayout>
+
+                            <LinearLayout
+                                android:orientation="vertical"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:id="@+id/jogControlsZLayout"
+                                android:layout_gravity="right"
+                                android:padding="20dp">
+
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="Z+"
+                                    android:id="@+id/zPlusJogButton"
+                                    android:textSize="@dimen/jog_button_text_size"
+                                    android:textColor="@color/colorPrimary"
+                                    android:layout_above="@+id/zMinusJogButton"
+                                    android:layout_alignParentRight="true"
+                                    android:layout_column="4" />
+
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="Zero\nZ"
+                                    android:id="@+id/zeroZButton"
+                                    android:textSize="16dp"
+                                    android:textColor="@color/colorAccent"
+                                    android:layout_above="@+id/zMinusJogButton"
+                                    android:layout_alignParentRight="true"
+                                    android:layout_column="4"
+                                    android:singleLine="false"
+                                    android:backgroundTint="#eeeeee" />
+
+                                <Button
+                                    android:layout_width="@dimen/jog_button_size"
+                                    android:layout_height="@dimen/jog_button_size"
+                                    android:text="Z-"
+                                    android:id="@+id/zMinusJogButton"
+                                    android:textSize="@dimen/jog_button_text_size"
+                                    android:textColor="@color/colorPrimary"
+                                    android:enabled="true"
+                                    android:layout_column="4" />
+                            </LinearLayout>
+
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"></FrameLayout>
+
+                        </LinearLayout>
 
                         <LinearLayout
                             android:orientation="horizontal"
@@ -250,12 +363,13 @@
                             <Button
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="Reset Zero"
-                                android:id="@+id/resetZeroButton"
-                                android:layout_centerVertical="true"
-                                android:layout_alignStart="@+id/xMinusJogButton"
+                                android:text="Homing Seq."
+                                android:id="@+id/homingSequenceButton"
+                                android:layout_alignBottom="@+id/returnToZeroButton"
+                                android:layout_toEndOf="@+id/returnToZeroButton"
                                 android:layout_weight="1"
-                                android:enabled="false" />
+                                android:enabled="true"
+                                android:textColor="@color/colorPrimary" />
 
                             <Button
                                 android:layout_width="0dp"
@@ -263,19 +377,22 @@
                                 android:text="Return to Zero"
                                 android:id="@+id/returnToZeroButton"
                                 android:layout_centerVertical="true"
-                                android:layout_toEndOf="@+id/resetZeroButton"
+                                android:layout_toEndOf="@+id/killAlarmButton"
                                 android:layout_weight="1"
-                                android:enabled="false" />
+                                android:enabled="true"
+                                android:textColor="@color/colorPrimary" />
 
                             <Button
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="Homing Seq."
-                                android:id="@+id/homingSequenceButton"
-                                android:layout_alignBottom="@+id/returnToZeroButton"
-                                android:layout_toEndOf="@+id/returnToZeroButton"
+                                android:text="Kill Alarm Lock"
+                                android:id="@+id/killAlarmButton"
+                                android:layout_centerVertical="true"
+                                android:layout_alignStart="@+id/zeroXYButton"
                                 android:layout_weight="1"
-                                android:enabled="false" />
+                                android:enabled="true"
+                                android:textColor="@color/colorStop" />
+
                         </LinearLayout>
 
                     </RelativeLayout>
@@ -290,7 +407,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1">
 
-            <com.lookintothebeam.grblr.ui.GcodeVisualizerSurfaceView
+            <com.lookintothebeam.grblr.ui.visualizer.GcodeVisualizerSurfaceView
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:onClick="onViewClick"
@@ -308,7 +425,7 @@
                     android:layout_alignParentTop="false"
                     android:layout_alignParentRight="true"
                     android:clickable="true"
-                    android:tint="#64b5f6"
+                    android:tint="@color/colorBlue"
                     android:id="@+id/realignVisualizerButton"
                     android:layout_margin="20dp"
                     android:layout_alignParentBottom="true" />
@@ -316,10 +433,10 @@
                 <android.support.design.widget.FloatingActionButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_directions_run_white_48dp"
-                    app:backgroundTint="@color/colorGo"
+                    android:src="@drawable/ic_pan_tool_white_24dp"
+                    app:backgroundTint="@color/colorStop"
                     android:clickable="true"
-                    android:id="@+id/runStopButton"
+                    android:id="@+id/feedHoldButton"
                     android:adjustViewBounds="true"
                     android:contextClickable="false"
                     android:cropToPadding="false"
@@ -331,7 +448,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/machine_position_string"
-                    android:id="@+id/textView"
+                    android:id="@+id/positionLabelTextView"
                     android:layout_alignParentTop="true"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
@@ -346,13 +463,31 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="X: 0.0\nY: 0.0\nZ: 0.0"
-                    android:id="@+id/machinePositionTextView"
+                    android:id="@+id/positionTextView"
                     android:textColor="#ffffff"
                     android:typeface="monospace"
-                    android:layout_below="@+id/textView"
+                    android:layout_below="@+id/positionLabelTextView"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
                     android:layout_marginLeft="20dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ALARM"
+                    android:id="@+id/alarmTextView"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentStart="true"
+                    android:typeface="monospace"
+                    android:textStyle="bold"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp"
+                    android:layout_margin="20dp"
+                    android:background="@color/colorStop"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="26dp" />
 
 
             </RelativeLayout>
