@@ -38,7 +38,7 @@ import com.nononsenseapps.filepicker.FilePickerActivity;
 import java.util.Map;
 import java.util.Set;
 
-import de.greenrobot.event.EventBus;
+import org.greenrobot.eventbus.EventBus;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -86,9 +86,9 @@ public class MainActivity extends AppCompatActivity {
             mCNCService = binder.getService();
             mCNCServiceBound = true;
 
-            EventBus.getDefault().registerSticky(MainActivity.this);
+            //EventBus.getDefault().registerSticky(MainActivity.this);
 
-            toggleUSBButtion(true);
+            toggleUSBButton(true);
         }
 
         @Override
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
             EventBus.getDefault().unregister(MainActivity.this);
 
-            toggleUSBButtion(false);
+            toggleUSBButton(false);
         }
     };
 
@@ -177,7 +177,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
 
         // The following call resumes a paused rendering thread.
         // Re-allocate graphic objects from onPause()
@@ -355,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void openFilePicker() {
         Intent i = new Intent(this, FilePickerActivity.class);
-        // Set these depending on your use case. These are the defaults.
+
         i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
         i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
         i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
@@ -364,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(i, FILE_PICK_CODE);
     }
 
-    private void toggleUSBButtion(boolean enabled) {
+    private void toggleUSBButton(boolean enabled) {
         mUSBConnectButton.setEnabled(enabled);
         mUSBConnectButton.setClickable(enabled);
         mUSBConnectButton.setImageAlpha(enabled ? 255 : 127);

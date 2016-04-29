@@ -25,7 +25,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:support-v4:23.1.1'
-    compile 'de.greenrobot:eventbus:2.4.0'
-    compile 'com.nanohttpd:nanohttpd:2.2.0'
-    compile 'com.nononsenseapps:filepicker:2.4.2'
+    compile 'org.greenrobot:eventbus:3.0.0'
+    compile 'org.nanohttpd:nanohttpd:2.3.0'
+    compile 'com.nononsenseapps:filepicker:2.5.2'
+    compile 'com.github.felHR85:UsbSerial:4.2'
 }

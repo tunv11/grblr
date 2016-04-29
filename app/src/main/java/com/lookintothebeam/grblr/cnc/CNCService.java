@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 
 
-import de.greenrobot.event.EventBus;
+import org.greenrobot.eventbus.EventBus;
 
 public class CNCService extends Service {
 

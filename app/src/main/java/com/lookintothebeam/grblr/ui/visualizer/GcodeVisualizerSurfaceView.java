@@ -11,30 +11,26 @@ public class GcodeVisualizerSurfaceView extends GLSurfaceView {
 
     private static final String TAG = "GcodeVisualizerSurface";
 
-    private final GcodeVisualizerRenderer renderer;
+    private final GcodeVisualizerRenderer mRenderer;
 
     private float previousX;
     private float previousY;
 
-    public GcodeVisualizerSurfaceView(Context context){
+    public GcodeVisualizerSurfaceView(Context context) {
         this(context, null);
     }
 
     public GcodeVisualizerSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        Log.d(TAG, "New Surface View.");
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
 
-        Log.d(TAG, "Creating renderer.");
-        renderer = new GcodeVisualizerRenderer();
+        mRenderer = new GcodeVisualizerRenderer(context);
 
-        Log.d(TAG, "Setting renderer");
         // Set the Renderer for drawing on the GLSurfaceView
-        setRenderer(renderer);
+        setRenderer(mRenderer);
 
-        Log.d(TAG, "Setting render mode.");
         // Render the view only when there is a change in the drawing data
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
@@ -65,14 +61,25 @@ public class GcodeVisualizerSurfaceView extends GLSurfaceView {
                     dy = dy * -1 ;
                 }
 
-
-                renderer.theta = renderer.theta + ((dx + dy) * TOUCH_SCALE_FACTOR);
+                mRenderer.theta = mRenderer.theta + ((dx + dy) * TOUCH_SCALE_FACTOR);
                 requestRender();
         }
 
         previousX = x;
         previousY = y;
         return true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mRenderer.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mRenderer.onResume();
     }
 
 }
